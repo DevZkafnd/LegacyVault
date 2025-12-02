@@ -1,167 +1,342 @@
 "use client";
 import { useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { recoverShamirKey, decryptData } from "@/lib/crypto";
-import { RiSafe2Fill } from "react-icons/ri";
+import { RiShieldCheckFill, RiArrowLeftLine, RiSearchLine } from "react-icons/ri";
+import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSelector from "@/components/LanguageSelector";
+import EnhancedVaultAnimation from "@/components/EnhancedVaultAnimation";
+import EnhancedCinematicLoader from "@/components/EnhancedCinematicLoader";
+import Link from "next/link";
+import VaultDoor from "@/components/VaultDoor";
+import SecurityScanOverlay from "@/components/SecurityScanOverlay";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function UnlockVault() {
-  const [email, setEmail] = useState("");
-  const [vaultData, setVaultData] = useState<any>(null);
-  const [inputShares, setInputShares] = useState<string[]>([]);
-  const [status, setStatus] = useState<"idle" | "searching" | "collecting_keys" | "decrypting" | "success">("idle");
-  const [secretMessage, setSecretMessage] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [shareErrors, setShareErrors] = useState<string[]>([]);
+type VaultDoc = {
+  encrypted_data: string;
+  threshold: number;
+};
+type RawVaultDoc = {
+  encrypted_data: string;
+  threshold: number;
+  created_at?: Timestamp;
+};
+type VaultOption = {
+  id: string;
+  encrypted_data: string;
+  threshold: number;
+  created_at?: Timestamp;
+};
 
+export default function UnlockVault() {
+  const { t } = useLanguage();
+  const [email, setEmail] = useState("");
+  const [vaultData, setVaultData] = useState<VaultDoc | null>(null);
+  const [inputShares, setInputShares] = useState<string[]>([]);
+  const [shareErrors, setShareErrors] = useState<string[]>([]);
+  const [emailError, setEmailError] = useState("");
+  const [status, setStatus] = useState<"idle" | "searching" | "selecting_vault" | "collecting_keys" | "decrypting" | "success">("idle");
+  const [secretMessage, setSecretMessage] = useState("");
+  const [showLoader, setShowLoader] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [vaultOptions, setVaultOptions] = useState<VaultOption[]>([]);
+
+  // Tahap 1: Cari Vault dulu
   const handleFindVault = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!emailRegex.test(email.trim())) {
-      setEmailError("Masukkan email pemilik yang valid.");
+      setEmailError(t('validEmail'));
       return;
     }
-    setEmailError("");
+    
     setStatus("searching");
+    setEmailError("");
+    
     try {
       const q = query(collection(db, "vaults"), where("user_email", "==", email.trim()));
       const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) throw new Error("Vault tidak ditemukan.");
-      const data = querySnapshot.docs[0].data();
-      setVaultData(data);
-      setInputShares(new Array(data.threshold).fill(""));
-      setShareErrors(new Array(data.threshold).fill(""));
-      setStatus("collecting_keys");
-    } catch (error) {
-      alert("Email tidak ditemukan atau belum membuat vault.");
+      if (querySnapshot.empty) {
+        throw new Error(t('vaultNotFound'));
+      }
+      const options: VaultOption[] = querySnapshot.docs.map((d) => {
+        const v = d.data() as RawVaultDoc;
+        return {
+          id: d.id,
+          encrypted_data: v.encrypted_data,
+          threshold: v.threshold,
+          created_at: v.created_at,
+        };
+      });
+      const sorted = options.sort((a, b) => {
+        const ad = a.created_at?.toDate ? a.created_at.toDate().getTime() : 0;
+        const bd = b.created_at?.toDate ? b.created_at.toDate().getTime() : 0;
+        return bd - ad;
+      });
+      setVaultOptions(sorted);
+      if (sorted.length === 1) {
+        const only = sorted[0];
+        setVaultData({ encrypted_data: only.encrypted_data, threshold: only.threshold });
+        setInputShares(new Array(only.threshold).fill(""));
+        setShareErrors(new Array(only.threshold).fill(""));
+        setStatus("collecting_keys");
+      } else {
+        setStatus("selecting_vault");
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      alert(message);
       setStatus("idle");
     }
   };
 
-  const validateShares = () => {
-    if (!vaultData) return false;
-    const newErrors = inputShares.map((share) => share.trim().length === 0 ? "Kunci wajib diisi." : "");
-    setShareErrors(newErrors);
-    return newErrors.every((msg) => msg === "");
-  };
-
+  // Tahap 2: Proses Penyatuan Kunci
   const handleCombineAndDecrypt = async () => {
     if (!validateShares()) return;
+    
     setStatus("decrypting");
+    setShowLoader(true);
+    setIsUnlocking(true);
+    
     try {
-      const masterKey = await recoverShamirKey(inputShares.map((share) => share.trim()));
+      // Add delay for cinematic effect
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      const masterKey = await recoverShamirKey(inputShares);
+      if (!vaultData) throw new Error("Vault data not found");
       const message = await decryptData(vaultData.encrypted_data, masterKey);
+      
       setSecretMessage(message);
+      setShowLoader(false);
+      setIsUnlocking(false);
       setStatus("success");
     } catch (error) {
       console.error(error);
-      alert("Gagal! Periksa kembali kombinasi kunci yang dimasukkan.");
+      alert(t('decryptionFailed'));
+      setShowLoader(false);
+      setIsUnlocking(false);
       setStatus("collecting_keys");
     }
   };
 
-  const handleShareInput = (index: number, value: string) => {
-    const sanitized = value.trim();
-    const newShares = [...inputShares];
-    newShares[index] = sanitized;
-    setInputShares(newShares);
-    const newErrors = [...shareErrors];
-    newErrors[index] = sanitized ? "" : "Kunci wajib diisi.";
+  const validateShares = () => {
+    const newErrors = inputShares.map((share) => 
+      share.trim().length === 0 ? t('keyRequired') : ""
+    );
     setShareErrors(newErrors);
+    return newErrors.every((msg) => msg === "");
+  };
+
+  const handleShareInput = (index: number, value: string) => {
+    const newShares = [...inputShares];
+    newShares[index] = value.trim();
+    setInputShares(newShares);
+    
+    // Clear error for this field
+    if (shareErrors[index]) {
+      const newErrors = [...shareErrors];
+      newErrors[index] = "";
+      setShareErrors(newErrors);
+    }
   };
 
   return (
-    <main className="relative min-h-screen w-full bg-gradient-to-br from-slate-950 via-gray-900 to-slate-900 px-4 py-16 text-white sm:px-8">
-      <div className="absolute inset-0 pointer-events-none opacity-30">
-        <div className="absolute top-0 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-purple-600/40 blur-[150px]" />
-        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-blue-500/30 blur-[150px]" />
+    <main className="min-h-screen relative" style={{
+      background: 'linear-gradient(135deg, var(--iron-black) 0%, var(--antique-steel) 60%, var(--old-vault) 100%)'
+    }}>
+      <VaultDoor size={460} />
+      <SecurityScanOverlay active={status === "searching"} />
+      {/* Language Selector */}
+      <div className="absolute top-6 right-6 z-20">
+        <LanguageSelector />
+      </div>
+      
+      {/* Back Button */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link href="/">
+          <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 border border-gray-500 rounded-lg transition-all duration-200 shadow-lg shadow-black/20">
+            <RiArrowLeftLine className="text-gray-300" />
+            <span className="text-sm text-gray-200">{t('back')}</span>
+          </button>
+        </Link>
       </div>
 
-      <section className="relative z-10 mx-auto flex max-w-5xl flex-col gap-10">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <RiSafe2Fill className="text-6xl text-purple-300 animate-bounce drop-shadow-lg" aria-hidden="true" />
-          <h1 className="text-3xl font-semibold tracking-tight text-purple-100 sm:text-4xl">The Council Unlock</h1>
-          <p className="max-w-2xl text-sm text-slate-300 sm:text-base">
-            Masukkan email pemilik vault, kumpulkan kunci dari guardian, lalu gabungkan untuk membuka pesan rahasia.
-          </p>
+      <section className="relative z-20 mx-auto flex max-w-5xl flex-col gap-10 p-6 sm:p-12 pt-24">
+        <div className="text-center">
+          <div className="relative mb-6 pb-16 cinematic-entrance">
+            <EnhancedVaultAnimation 
+              size="lg" 
+              showMechanism={true}
+              isUnlocking={isUnlocking}
+              isSuccess={status === "success"}
+            />
+          </div>
+          <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent cinematic-entrance">
+            {t('councilUnlock')} 🗝️
+          </h1>
         </div>
 
+        {/* VIEW 1: HASIL SUKSES */}
         {status === "success" && (
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/20 to-green-500/20 p-8 text-center shadow-2xl shadow-emerald-900/40 backdrop-blur-xl">
-            <h2 className="text-2xl font-bold text-emerald-200">CONSENSUS REACHED ✅</h2>
-            <p className="mt-2 text-sm text-emerald-100">Legacy message:</p>
-            <div className="mt-4 rounded-2xl border border-white/10 bg-black/60 p-6 text-left font-mono text-lg text-white whitespace-pre-wrap">
+          <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur-xl border-2 border-green-500 rounded-2xl p-8 text-center shadow-2xl shadow-green-900/30 success-explosion">
+            <div className="relative mb-6">
+              <EnhancedVaultAnimation 
+                size="lg" 
+                showMechanism={true}
+                isSuccess={true}
+              />
+            </div>
+            <h2 className="text-2xl font-bold text-green-400 mb-6 cinematic-entrance">
+              {t('consensusReached')}
+            </h2>
+            <div className="bg-black/70 border border-green-600 p-6 rounded-xl text-xl font-mono text-white whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto scrollbar-steel cinematic-entrance">
               {secretMessage}
             </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-6 rounded-2xl border border-white/30 px-6 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-6 px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 border border-gray-500 rounded-lg text-gray-200 transition-all duration-200 cinematic-entrance"
             >
-              Reset Session
+              {t('reset')}
             </button>
           </div>
         )}
 
+        {/* VIEW 2: FORM PENCARIAN */}
         {(status === "idle" || status === "searching") && (
-          <form onSubmit={handleFindVault} className="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-2xl shadow-black/70 space-y-4">
-            <label className="text-sm text-slate-300">Email Pemilik Vault</label>
-            <input
-              type="email"
-              required
-              placeholder="email@contoh.com"
-              className={`w-full rounded-2xl border bg-black/60 px-4 py-3 text-sm text-white outline-none transition ${
-                emailError ? "border-red-500 focus:border-red-400" : "border-white/10 focus:border-purple-400"
-              }`}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            {emailError && <p className="text-xs text-red-400">{emailError}</p>}
-            <button
-              type="submit"
-              disabled={status === "searching"}
-              className="w-full rounded-2xl bg-purple-600 py-3 text-base font-semibold shadow-lg shadow-purple-700/40 transition hover:-translate-y-0.5 hover:bg-purple-500 disabled:opacity-60"
-            >
-              {status === "searching" ? "Mencari..." : "Cari Vault"}
-            </button>
-          </form>
+          <div className="vault-card rounded-2xl p-8">
+            <form onSubmit={handleFindVault} className="space-y-6">
+              <div>
+                <label className="block vault-label font-medium mb-2">
+                  {t('enterOwnerEmail')}
+                </label>
+                <div className="relative">
+                  <RiSearchLine className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="email" 
+                    required 
+                    placeholder={t('emailPlaceholder')}
+                    value={email}
+                    className={`vault-input w-full pl-10 pr-4 py-3 border ${
+                      emailError ? 'border-red-500' : 'border-gray-600'
+                    } rounded-lg transition-all duration-200`}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError("");
+                    }}
+                  />
+                </div>
+                {emailError && <p className="text-red-400 text-sm mt-1">{emailError}</p>}
+              </div>
+              
+              <button 
+                type="submit" 
+                disabled={status === "searching"} 
+                className="w-full py-4 rounded-xl font-bold transition-all duration-300 relative overflow-hidden group gold-btn"
+              >
+                <span className="relative z-10">
+                  {status === "searching" ? t('searching') : t('searchVault')}
+                </span>
+                {status !== "searching" && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                )}
+              </button>
+            </form>
+          </div>
         )}
 
+        {status === "selecting_vault" && (
+          <div className="vault-card rounded-2xl p-8">
+            <div className="space-y-4">
+              {vaultOptions.map((v) => {
+                const dt = v.created_at?.toDate ? v.created_at.toDate() : undefined;
+                const label = dt ? dt.toISOString() : "Unknown";
+                return (
+                  <div key={v.id} className="flex items-center justify-between p-4 border border-gray-700 rounded-lg bg-black/30">
+                    <div className="text-gray-200">
+                      <div className="font-semibold">{label}</div>
+                      <div className="text-sm">{t('needKeys', { threshold: v.threshold.toString() })}</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setVaultData({ encrypted_data: v.encrypted_data, threshold: v.threshold });
+                        setInputShares(new Array(v.threshold).fill(""));
+                        setShareErrors(new Array(v.threshold).fill(""));
+                        setStatus("collecting_keys");
+                      }}
+                      className="px-4 py-2 rounded-lg gold-btn"
+                    >
+                      {t('vaultFound')}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* VIEW 3: FORM INPUT KUNCI */}
         {(status === "collecting_keys" || status === "decrypting") && vaultData && (
-          <div className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/60 backdrop-blur-lg">
-            <div className="rounded-2xl border border-purple-400/30 bg-purple-500/10 p-4 text-center text-sm text-purple-100">
-              Vault ditemukan. Dibutuhkan <strong>{vaultData.threshold}</strong> dari <strong>{vaultData.total_shares}</strong> kunci Guardian.
+          <div className="space-y-6">
+            <div className="vault-card rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <RiShieldCheckFill className="text-green-400 text-xl" />
+                <p className="text-sm vault-label">{t('vaultFound')}</p>
+              </div>
+              <p className="font-bold text-[color:var(--royal-gold-glow)]">
+                {t('needKeys', { threshold: vaultData.threshold.toString() })}
+              </p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {inputShares.map((share, index) => (
-                <div key={index} className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-slate-300">
-                    Guardian #{index + 1}
-                  </label>
-                  <input
-                    type="text"
-                    value={share}
-                    className={`mt-2 w-full rounded-2xl border bg-black/60 px-3 py-3 font-mono text-xs text-yellow-200 outline-none transition ${
-                      shareErrors[index] ? "border-red-500 focus:border-red-400" : "border-white/10 focus:border-green-400"
-                    }`}
-                    placeholder={`Paste kode kunci ke-${index + 1}`}
-                    onChange={(e) => handleShareInput(index, e.target.value)}
-                  />
-                  {shareErrors[index] && <p className="mt-1 text-xs text-red-400">{shareErrors[index]}</p>}
-                </div>
-              ))}
+
+            <div className="vault-card rounded-2xl p-8">
+              <div className="space-y-4 mb-6">
+                {inputShares.map((_, index) => (
+                  <div key={index}>
+                    <label className="block text-sm vault-label font-medium mb-2">
+                      {t('guardianKey')} #{index + 1}
+                    </label>
+                    <input 
+                      type="text"
+                      value={inputShares[index]}
+                      className={`vault-input w-full p-3 rounded-lg border ${
+                        shareErrors[index] ? 'border-red-500' : 'border-gray-700'
+                      } font-mono text-sm transition-all duration-200`}
+                      placeholder={t('pasteKey', { index: (index + 1).toString() })}
+                      onChange={(e) => handleShareInput(index, e.target.value)}
+                    />
+                    {shareErrors[index] && (
+                      <p className="text-red-400 text-sm mt-1">{shareErrors[index]}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              <button 
+                onClick={handleCombineAndDecrypt}
+                disabled={status === "decrypting"}
+                className="w-full py-5 rounded-xl font-bold text-lg relative overflow-hidden group gold-btn"
+              >
+                <span className="relative z-10">
+                  {status === "decrypting" ? t('combining') : t('combineAndOpen')}
+                </span>
+                {status !== "decrypting" && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                )}
+              </button>
             </div>
-            <button
-              onClick={handleCombineAndDecrypt}
-              disabled={status === "decrypting"}
-              className="w-full rounded-2xl bg-green-500 py-4 text-lg font-semibold text-gray-900 shadow-xl shadow-green-900/50 transition hover:-translate-y-0.5 hover:bg-green-400 disabled:opacity-70"
-            >
-              {status === "decrypting" ? "Menggabungkan Kunci..." : "Gabungkan & Buka"}
-            </button>
           </div>
         )}
       </section>
+
+      {/* Cinematic Loader */}
+      <EnhancedCinematicLoader 
+        isVisible={showLoader} 
+        message={t('combining')}
+        onComplete={() => {
+          setShowLoader(false);
+        }}
+      />
     </main>
   );
 }
-
-

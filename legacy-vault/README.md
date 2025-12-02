@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LegacyVault
 
-## Getting Started
+A classic, elegant, and secure vault‑inspired web application. LegacyVault blends a vintage "Old but Gold" aesthetic with a modern React/Next.js stack to deliver a refined experience for creating and unlocking vaults, visualizing security cues, and showcasing cinematic vault interactions. It is designed as a practical learning project and a compelling demo for secure‑by‑design UI patterns.
 
-First, run the development server:
+## Description
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+LegacyVault is a modern web application that simulates the flow of creating and unlocking a digital vault with an emphasis on clarity, trust, and presentation. The project focuses on three pillars:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1) Design authenticity — a matte gold, antique steel look and subtle metal textures evoke the feel of a traditional bank vault. Micro‑animations and refined motion choices (gentle fades, slides, and glows) support a sense of weight and craftsmanship without distraction.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2) Usability and clarity — screens and components are purpose‑built to guide users through the vault lifecycle with minimal friction. Typography uses Merriweather for expressive headings and Inter for readable body text. Consistent components (vault cards, gold/steel buttons, structured forms) provide strong visual hierarchy and recognizable interaction patterns.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3) Practical security concepts — the app models vault creation/unlock flows and surfaces security overlays, scan cues, and status indicators. The architecture is modular, making it straightforward to integrate real encryption, secret sharing, or cloud backends as future enhancements. Libraries such as `secrets.js-grempe` and `firebase` are included to enable experimentation with secure recovery and data storage scenarios.
 
-## Learn More
+Who benefits? Students and practitioners who want to learn modern frontend patterns while studying how presentation can strengthen trust in security workflows. Teams can adapt LegacyVault into demos, onboarding flows, or proof‑of‑concepts showcasing secure UX.
 
-To learn more about Next.js, take a look at the following resources:
+## Link
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+GitHub: https://github.com/DevZkafnd/LegacyVault.git
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Team Info
 
-## Deploy on Vercel
+- Solo developer: Zaki Affandi
+- Affiliation: Telkom University (Indonesia)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Framework: `Next.js 16` (App Router), `React 19`, `TypeScript 5`
+- Styling: Global CSS, `Tailwind CSS 4` (with PostCSS integration)
+- Animation & visuals: `framer-motion`, `lottie-react`, `react-icons`
+- Security & data: `secrets.js-grempe` (secret sharing experiments), `firebase` (optional integration)
+- Tooling: `eslint 9`, `eslint-config-next`
+
+## Evaluation Criteria
+
+### Clarity
+- Clear, guided flows for creating and unlocking vaults.
+- Intentional typography and component hierarchy for readability.
+- Consistent naming and structure across pages and components.
+
+### Innovation
+- Vintage "Old but Gold" design paired with a modern stack.
+- Cinematic vault interactions with subtle, performance‑friendly motion.
+- Modular hooks for future encryption, recovery shards, or cloud sync.
+
+### Impact Potential
+- Educational value for students learning secure UX patterns.
+- Reusable UI and motion primitives for demos and onboarding.
+- Adaptable foundation for real secure workflows in production.
+
+### Feasibility
+- Built on mainstream, production‑ready technologies (Next.js, React, TypeScript).
+- Lightweight, testable components and clear file organization.
+- Linting and modern configs to sustain maintainability.
+
+### Presentation
+- Matte gold and antique steel palette for classic elegance.
+- Subtle glows and motion that highlight, not overwhelm.
+- Cohesive visuals across pages, components, and states.

@@ -1,6 +1,6 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,6 +15,8 @@ const firebaseConfig = {
 // Mencegah error "Firebase App already initialized" saat hot-reload
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Export Firestore database instance
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
+
 

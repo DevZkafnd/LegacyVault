@@ -1,26 +1,245 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Classic but Gold Vault Palette */
+  --iron-black: #0B0C10;
+  --antique-steel: #1A1C22;
+  --old-vault: #23262E;
+  --oxidized-steel: #3A3D45;
+  --antique-gold: #C6A667;
+  --classic-brass: #D4B676;
+  --vintage-gold: #E3C892;
+  --royal-gold-glow: #FAE7B2;
+  --old-silver: #9A9EA7;
+  --soft-pewter: #C0C3C9;
+  --bronze-patina: #746B54;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--iron-black);
+  --color-foreground: var(--soft-pewter);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-merriweather);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, var(--iron-black) 0%, var(--antique-steel) 60%, var(--old-vault) 100%);
+  color: var(--soft-pewter);
+  font-family: var(--font-inter), system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+/* Steel Vault Animations */
+@keyframes vault-glow {
+  0%, 100% { 
+    box-shadow: 0 0 18px rgba(198, 166, 103, 0.25), 0 0 28px rgba(198, 166, 103, 0.12);
+    filter: drop-shadow(0 0 6px rgba(198, 166, 103, 0.35));
+  }
+  50% { 
+    box-shadow: 0 0 26px rgba(198, 166, 103, 0.35), 0 0 36px rgba(198, 166, 103, 0.18);
+    filter: drop-shadow(0 0 10px rgba(198, 166, 103, 0.45));
+  }
+}
+
+@keyframes steel-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes vault-door-open {
+  0% { 
+    transform: perspective(1000px) rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: perspective(800px) rotateY(-8deg) scale(1.03);
+    opacity: 0.9;
+  }
+  100% { 
+    transform: perspective(800px) rotateY(-35deg) scale(0.96);
+    opacity: 0.85;
+  }
+}
+
+/* Classic Vault UI Helpers */
+.vault-card {
+  background: linear-gradient(180deg, rgba(26,28,34,0.85), rgba(35,38,46,0.85));
+  border: 1px solid rgba(198,166,103,0.18);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  backdrop-filter: blur(8px);
+}
+
+.gold-divider {
+  border-top: 1px solid rgba(198,166,103,0.25);
+}
+
+.gold-btn {
+  background: linear-gradient(135deg, var(--antique-gold), var(--classic-brass));
+  color: #0B0C10;
+  border: 1px solid rgba(198,166,103,0.35);
+  box-shadow: inset 0 -2px 0 rgba(116,107,84,0.25), 0 10px 24px rgba(0,0,0,0.35);
+}
+.gold-btn:hover {
+  box-shadow: inset 0 -2px 0 rgba(116,107,84,0.3), 0 14px 28px rgba(0,0,0,0.4);
+  filter: brightness(1.02);
+}
+
+.steel-btn {
+  background: linear-gradient(135deg, var(--oxidized-steel), var(--old-vault));
+  color: var(--soft-pewter);
+  border: 1px solid rgba(154,158,167,0.35);
+  box-shadow: inset 0 -2px 0 rgba(58,61,69,0.25), 0 10px 24px rgba(0,0,0,0.35);
+}
+.steel-btn:hover {
+  box-shadow: inset 0 -2px 0 rgba(58,61,69,0.3), 0 14px 28px rgba(0,0,0,0.4);
+}
+
+.vault-input {
+  background: linear-gradient(135deg, rgba(26,28,34,0.9), rgba(35,38,46,0.9));
+  border: 1px solid rgba(154,158,167,0.35);
+  color: var(--royal-gold-glow);
+}
+
+.vault-label {
+  color: var(--soft-pewter);
+}
+
+@keyframes vault-mechanism {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes vault-unlock-sequence {
+  0% { 
+    transform: scale(1) rotate(0deg);
+    filter: hue-rotate(0deg);
+  }
+  25% { 
+    transform: scale(1.1) rotate(90deg);
+    filter: hue-rotate(90deg);
+  }
+  50% { 
+    transform: scale(1.2) rotate(180deg);
+    filter: hue-rotate(180deg);
+  }
+  75% { 
+    transform: scale(1.1) rotate(270deg);
+    filter: hue-rotate(270deg);
+  }
+  100% { 
+    transform: scale(1) rotate(360deg);
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes cinematic-entrance {
+  0% {
+    transform: translateY(100px) scale(0.8);
+    opacity: 0;
+    filter: blur(10px);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+    opacity: 0.8;
+    filter: blur(2px);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes vault-breathing {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
+}
+
+@keyframes success-explosion {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+    filter: blur(20px) hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+    filter: blur(0px) hue-rotate(180deg);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0px) hue-rotate(360deg);
+  }
+}
+
+@keyframes typing-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.vault-glow {
+  animation: vault-glow 3s ease-in-out infinite;
+}
+
+.steel-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(184, 184, 189, 0.4), transparent);
+  background-size: 200% 100%;
+  animation: steel-shimmer 2s infinite;
+}
+
+.vault-door-opening {
+  animation: vault-door-open 2s ease-in-out forwards;
+}
+
+.vault-mechanism-spinning {
+  animation: vault-mechanism 3s linear infinite;
+}
+
+.vault-unlocking {
+  animation: vault-unlock-sequence 2s ease-in-out;
+}
+
+.cinematic-entrance {
+  animation: cinematic-entrance 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.vault-breathing {
+  animation: vault-breathing 4s ease-in-out infinite;
+}
+
+.success-explosion {
+  animation: success-explosion 2s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.typing-cursor::after {
+  content: '|';
+  animation: typing-cursor 1s infinite;
+}
+
+/* Custom Scrollbar */
+.scrollbar-steel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-steel::-webkit-scrollbar-track {
+  background: var(--steel-medium);
+}
+
+.scrollbar-steel::-webkit-scrollbar-thumb {
+  background: var(--steel-accent);
+  border-radius: 4px;
+}
+
+.scrollbar-steel::-webkit-scrollbar-thumb:hover {
+  background: var(--steel-bright);
 }

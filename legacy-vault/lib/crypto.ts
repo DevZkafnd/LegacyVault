@@ -1,7 +1,6 @@
 // src/lib/crypto.ts
 
-// @ts-ignore
-import secrets from "secrets.js-grempe";
+import * as secrets from "secrets.js-grempe";
 
 // 1. Generate Random Master Key
 export async function generateMasterKey(): Promise<CryptoKey> {
@@ -70,7 +69,7 @@ export async function decryptData(encryptedBlob: string, key: CryptoKey) {
     );
     const decoder = new TextDecoder();
     return decoder.decode(decryptedBuffer);
-  } catch (e) {
+  } catch {
     throw new Error("Kunci salah atau kombinasi share tidak valid!");
   }
 }
@@ -82,4 +81,3 @@ function buf2hex(buffer: Uint8Array) {
 function hex2buf(hexString: string) {
   return new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
 }
-
