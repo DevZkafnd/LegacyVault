@@ -21,7 +21,7 @@ GitHub: https://github.com/DevZkafnd/LegacyVault.git
 ## Team Info
 
 - Solo developer: Zaki Affandi
-- Affiliation: Telkom University (Indonesia)
+- school: Telkom University (Indonesia)
 
 ## Tech Stack
 
