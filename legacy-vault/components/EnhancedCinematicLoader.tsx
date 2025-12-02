@@ -13,6 +13,7 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
   const { t } = useLanguage();
   const [progress, setProgress] = useState(0);
   const [currentMessage, setCurrentMessage] = useState(message || t('vaultOpening'));
+  const [supportsConic, setSupportsConic] = useState(true);
   const scanLines = useMemo(() => Array.from({length: 8}, (_, i) => ({ id: i, delay: i * 0.2 })), []);
   const loadingMessages = useMemo(() => ([
     t('securityProtocol'),
@@ -20,6 +21,15 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
     t('vaultOpening'),
     t('accessGranted')
   ]), [t]);
+
+  useEffect(() => {
+    try {
+      const ok = typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('background', 'conic-gradient(from 0deg, #000 0deg, transparent 0deg)');
+      setTimeout(() => setSupportsConic(!!ok), 0);
+    } catch {
+      setTimeout(() => setSupportsConic(false), 0);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -63,7 +73,7 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="text-center space-y-12">
+        <div className="text-center space-y-8 sm:space-y-12 px-4">
           {/* Enhanced Vault Door Animation */}
           <motion.div 
             className="relative"
@@ -71,7 +81,7 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 1, ease: "backOut" }}
           >
-            <div className="w-40 h-40 mx-auto relative">
+            <div className="w-32 h-32 sm:w-40 sm:h-40 mx-auto relative">
               {/* Outer Rings */}
               {[...Array(3)].map((_, i) => (
                 <motion.div
@@ -103,8 +113,10 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
               {/* Progress Ring */}
               <motion.div 
                 className="absolute inset-4 rounded-full overflow-hidden"
-                style={{
+                style={supportsConic ? {
                   background: `conic-gradient(from 0deg, #eab308 ${progress * 3.6}deg, transparent ${progress * 3.6}deg)`
+                } : {
+                  border: '2px solid rgba(234,179,8,0.5)'
                 }}
                 animate={{
                   filter: [
@@ -219,7 +231,7 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
 
           {/* Enhanced Progress Bar */}
           <motion.div 
-            className="w-96 mx-auto"
+            className="w-72 sm:w-96 mx-auto"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -245,7 +257,7 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
               </motion.div>
             </div>
             
-            <div className="flex justify-between text-xs text-gray-400 mt-3">
+            <div className="flex justify-between text-xs text-gray-400 mt-2 sm:mt-3">
               <span>0%</span>
               <motion.span 
                 className="font-mono text-yellow-400"
@@ -295,7 +307,7 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
             </AnimatePresence>
             
             {/* Scanning Lines Effect */}
-            <div className="relative w-96 h-2 mx-auto bg-gray-800 rounded overflow-hidden">
+            <div className="relative w-72 sm:w-96 h-2 mx-auto bg-gray-800 rounded overflow-hidden">
               {scanLines.map((line) => (
                 <motion.div
                   key={line.id}
@@ -315,7 +327,7 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
 
           {/* Enhanced Security Indicators */}
           <motion.div 
-            className="flex justify-center space-x-8 text-sm"
+            className="flex justify-center space-x-6 sm:space-x-8 text-xs sm:text-sm"
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 1 }}
@@ -324,7 +336,7 @@ export default function EnhancedCinematicLoader({ isVisible, message, onComplete
               { name: t('aes256'), threshold: 20 },
               { name: t('shamirSSS'), threshold: 50 },
               { name: t('zeroKnowledge'), threshold: 80 }
-            ].map((item, index) => (
+            ].map((item) => (
               <motion.div
                 key={item.name}
                 className={`flex items-center space-x-2 ${

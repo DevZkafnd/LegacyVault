@@ -12,6 +12,7 @@ import EnhancedVaultAnimation from "@/components/EnhancedVaultAnimation";
 import EnhancedCinematicLoader from "@/components/EnhancedCinematicLoader";
 import Link from "next/link";
 import VaultDoor from "@/components/VaultDoor";
+import ToastContainer from "@/components/Toast";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -95,7 +96,9 @@ export default function CreateVault() {
       
     } catch (error) {
       console.error(error);
-      alert(t('failedCreateVault'));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lv-toast', { detail: { kind: 'error', message: t('failedCreateVault') } }));
+      }
       setLoading(false);
       setShowLoader(false);
     }
@@ -106,6 +109,9 @@ export default function CreateVault() {
       <main className="min-h-screen relative" style={{
         background: 'linear-gradient(135deg, var(--iron-black) 0%, var(--antique-steel) 60%, var(--old-vault) 100%)'
       }}>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 -translate-y-12 sm:-translate-y-14">
+          <div className="w-[460px] h-[460px] sm:w-[540px] sm:h-[540px] rounded-full bg-gradient-radial from-amber-400/10 via-amber-300/6 to-transparent blur-3xl border border-amber-500/20"></div>
+        </div>
         <VaultDoor size={460} color="#D4AF37" />
         {/* Language Selector */}
         <div className="absolute top-6 right-6 z-20">
@@ -124,15 +130,15 @@ export default function CreateVault() {
         
         <section className="relative z-10 mx-auto flex max-w-6xl flex-col gap-12 p-6 sm:p-12 pt-20">
           <div className="text-center">
-            <div className="relative mb-6 cinematic-entrance">
+            <div className="relative mb-8 sm:mb-10 cinematic-entrance">
               <EnhancedVaultAnimation isSuccess={true} size="lg" showMechanism={true} />
             </div>
-            <h1 className="text-3xl font-bold sm:text-4xl bg-gradient-to-r from-yellow-500 to-amber-400 bg-clip-text text-transparent cinematic-entrance">
+            <h1 className="text-3xl font-bold sm:text-4xl mb-4 bg-gradient-to-r from-yellow-500 to-amber-400 bg-clip-text text-transparent cinematic-entrance">
               {t('vaultCreated')}
             </h1>
           </div>
 
-          <div className="vault-card rounded-2xl p-8">
+          <div className="vault-card rounded-2xl p-8 mt-6 bg-gradient-to-r from-gray-900/70 to-black/70 backdrop-blur-sm">
             <p className="mb-6 text-gray-300 text-center leading-relaxed">
               {t('shareInstructions', { threshold: formData.threshold.toString(), total: formData.totalGuardians.toString() })}
               <br/>
@@ -190,14 +196,18 @@ export default function CreateVault() {
     <main className="min-h-screen relative" style={{
       background: 'linear-gradient(135deg, var(--iron-black) 0%, var(--antique-steel) 60%, var(--old-vault) 100%)'
     }}>
+      <ToastContainer />
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 -translate-y-8 sm:-translate-y-10">
+        <div className="w-[460px] h-[460px] sm:w-[540px] sm:h-[540px] rounded-full bg-gradient-radial from-amber-400/10 via-amber-300/6 to-transparent blur-3xl border border-amber-500/20"></div>
+      </div>
       <VaultDoor size={460} color="#D4AF37" />
       {/* Language Selector */}
-      <div className="absolute top-6 right-6 z-20">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 pointer-events-auto">
         <LanguageSelector />
       </div>
       
       {/* Back Button */}
-      <div className="absolute top-6 left-6 z-20">
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-50 pointer-events-auto">
         <Link href="/">
           <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 border border-gray-500 rounded-lg transition-all duration-200 shadow-lg shadow-black/20">
             <RiArrowLeftLine className="text-gray-300" />
@@ -206,16 +216,18 @@ export default function CreateVault() {
         </Link>
       </div>
 
-      <motion.section className="relative z-20 mx-auto flex max-w-4xl flex-col items-center gap-8 p-6 sm:p-12 pt-24"
+      <motion.section className="relative z-20 mx-auto flex max-w-4xl flex-col items-center gap-6 sm:gap-8 p-4 sm:p-12 pt-20 sm:pt-24"
         initial={{ x: '-100%', opacity: 0.9 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: 'easeInOut' }}
       >
         <div className="text-center">
-          <div className="mb-4 cinematic-entrance">
-            <EnhancedVaultAnimation size="lg" showMechanism={true} />
+          <div className="mb-6 sm:mb-8 cinematic-entrance">
+            <div className="scale-90 sm:scale-100">
+              <EnhancedVaultAnimation size="lg" showMechanism={false} minimal={true} />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-500 to-amber-400 bg-clip-text text-transparent cinematic-entrance">
+          <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-yellow-500 to-amber-400 bg-clip-text text-transparent cinematic-entrance">
             {t('createCouncil')}
           </h1>
           <p className="text-gray-400 mb-8 cinematic-entrance">{t('shamirProtocol')}</p>
@@ -223,7 +235,7 @@ export default function CreateVault() {
         
         <motion.form 
           onSubmit={handleCreate} 
-          className="w-full max-w-md space-y-6"
+          className="w-full max-w-md space-y-5 sm:space-y-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
@@ -245,7 +257,7 @@ export default function CreateVault() {
             {errors.myEmail && <p className="text-red-400 text-sm mt-1">{errors.myEmail}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm mb-2 text-gray-300 font-medium">{t('totalGuardians')}</label>
               <input 
@@ -288,7 +300,7 @@ export default function CreateVault() {
             <label className="block text-sm mb-2 text-gray-300 font-medium">{t('secretMessage')}</label>
             <textarea 
               required 
-              rows={4}
+              rows={5}
               value={formData.secretMessage}
               className={`w-full p-3 rounded-lg bg-gradient-to-r from-gray-800 to-gray-700 border ${
                 errors.secretMessage ? 'border-red-500' : 'border-gray-600'
@@ -306,7 +318,7 @@ export default function CreateVault() {
           <motion.button 
             type="submit" 
             disabled={loading}
-          className="w-full gold-btn font-bold py-4 rounded-xl transition-all duration-300 disabled:opacity-70 relative overflow-hidden group"
+          className="w-full gold-btn font-bold py-4 sm:py-5 rounded-xl transition-all duration-300 disabled:opacity-70 relative overflow-hidden group"
             whileHover={!loading ? { 
               scale: 1.02,
               boxShadow: "0 20px 40px rgba(217, 119, 6, 0.4)"

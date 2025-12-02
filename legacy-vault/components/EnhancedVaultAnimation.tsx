@@ -9,13 +9,15 @@ interface EnhancedVaultAnimationProps {
   isSuccess?: boolean;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showMechanism?: boolean;
+  minimal?: boolean;
 }
 
 export default function EnhancedVaultAnimation({ 
   isUnlocking = false, 
   isSuccess = false, 
   size = 'lg',
-  showMechanism = true 
+  showMechanism = true,
+  minimal = false
 }: EnhancedVaultAnimationProps) {
   const { t } = useLanguage();
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -154,7 +156,7 @@ export default function EnhancedVaultAnimation({
         </motion.div>
         
         {/* Enhanced Lock Mechanism */}
-        {showMechanism && (
+        {showMechanism && !minimal && (
           <motion.div 
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
             variants={mechanismVariants}
@@ -310,6 +312,7 @@ export default function EnhancedVaultAnimation({
       </AnimatePresence>
 
       {/* Enhanced Status Indicator */}
+      {!minimal && (
       <motion.div 
         className="absolute -bottom-12 left-1/2 transform -translate-x-1/2"
         initial={{ y: 20, opacity: 0 }}
@@ -350,6 +353,7 @@ export default function EnhancedVaultAnimation({
           </AnimatePresence>
         </motion.div>
       </motion.div>
+      )}
 
       {/* Ripple Effect */}
       <AnimatePresence>

@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   description: "Zero-knowledge digital inheritance with AES-256 + Shamir's Secret Sharing.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,6 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="format-detection" content="telephone=no,email=no,address=no" />
+      </head>
       <body className={`${merriweather.variable} ${inter.variable} antialiased`}>
         <LanguageProvider>
           {children}

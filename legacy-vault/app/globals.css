@@ -67,6 +67,7 @@ body {
   border: 1px solid rgba(198,166,103,0.18);
   box-shadow: 0 8px 28px rgba(0,0,0,0.35);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .gold-divider {

@@ -8,6 +8,7 @@ export default function LanguageSelector() {
   const { currentLanguage, setLanguage, availableLanguages, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [hydrated, setHydrated] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currentLang = availableLanguages.find(lang => lang.code === currentLanguage);
@@ -19,6 +20,7 @@ export default function LanguageSelector() {
   );
 
   useEffect(() => {
+    const id = setTimeout(() => setHydrated(true), 0);
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -27,7 +29,10 @@ export default function LanguageSelector() {
     }
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const handleLanguageSelect = (lang: Language) => {
@@ -43,8 +48,8 @@ export default function LanguageSelector() {
         className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 border border-gray-500 rounded-lg transition-all duration-200 shadow-lg shadow-black/20"
       >
         <RiGlobalLine className="text-gray-300" />
-        <span className="text-sm font-medium text-gray-200">
-          {currentLang?.flag} {currentLang?.nativeName}
+        <span className="text-sm font-medium text-gray-200" suppressHydrationWarning>
+          {hydrated ? `${currentLang?.flag} ${currentLang?.nativeName}` : 'Language'}
         </span>
         <RiArrowDownSLine className={`text-gray-300 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>

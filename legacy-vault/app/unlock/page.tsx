@@ -11,6 +11,7 @@ import EnhancedCinematicLoader from "@/components/EnhancedCinematicLoader";
 import Link from "next/link";
 import VaultDoor from "@/components/VaultDoor";
 import SecurityScanOverlay from "@/components/SecurityScanOverlay";
+import ToastContainer from "@/components/Toast";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -87,7 +88,9 @@ export default function UnlockVault() {
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      alert(message);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lv-toast', { detail: { kind: 'error', message } }));
+      }
       setStatus("idle");
     }
   };
@@ -114,7 +117,9 @@ export default function UnlockVault() {
       setStatus("success");
     } catch (error) {
       console.error(error);
-      alert(t('decryptionFailed'));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lv-toast', { detail: { kind: 'error', message: t('decryptionFailed') } }));
+      }
       setShowLoader(false);
       setIsUnlocking(false);
       setStatus("collecting_keys");
@@ -146,15 +151,19 @@ export default function UnlockVault() {
     <main className="min-h-screen relative" style={{
       background: 'linear-gradient(135deg, var(--iron-black) 0%, var(--antique-steel) 60%, var(--old-vault) 100%)'
     }}>
+      <ToastContainer />
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <div className="w-[460px] h-[460px] sm:w-[540px] sm:h-[540px] rounded-full bg-gradient-radial from-amber-400/10 via-amber-300/6 to-transparent blur-3xl border border-amber-500/20"></div>
+      </div>
       <VaultDoor size={460} />
       <SecurityScanOverlay active={status === "searching"} />
       {/* Language Selector */}
-      <div className="absolute top-6 right-6 z-20">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 pointer-events-auto">
         <LanguageSelector />
       </div>
       
       {/* Back Button */}
-      <div className="absolute top-6 left-6 z-20">
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-50 pointer-events-auto">
         <Link href="/">
           <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 border border-gray-500 rounded-lg transition-all duration-200 shadow-lg shadow-black/20">
             <RiArrowLeftLine className="text-gray-300" />
@@ -163,35 +172,39 @@ export default function UnlockVault() {
         </Link>
       </div>
 
-      <section className="relative z-20 mx-auto flex max-w-5xl flex-col gap-10 p-6 sm:p-12 pt-24">
+      <section className="relative z-20 mx-auto flex max-w-5xl flex-col gap-8 sm:gap-10 p-4 sm:p-12 pt-16 sm:pt-20">
         <div className="text-center">
-          <div className="relative mb-6 pb-16 cinematic-entrance">
-            <EnhancedVaultAnimation 
-              size="lg" 
-              showMechanism={true}
-              isUnlocking={isUnlocking}
-              isSuccess={status === "success"}
-            />
+          <div className="relative mb-2 pb-4 sm:pb-6 cinematic-entrance">
+            <div className="scale-90 sm:scale-100">
+              <EnhancedVaultAnimation 
+                size="lg" 
+                showMechanism={true}
+                isUnlocking={isUnlocking}
+                isSuccess={status === "success"}
+                minimal={true}
+              />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent cinematic-entrance">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent cinematic-entrance">
             {t('councilUnlock')} 🗝️
           </h1>
         </div>
 
         {/* VIEW 1: HASIL SUKSES */}
         {status === "success" && (
-          <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur-xl border-2 border-green-500 rounded-2xl p-8 text-center shadow-2xl shadow-green-900/30 success-explosion">
+          <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur-xl border-2 border-green-500 rounded-2xl p-6 sm:p-8 text-center shadow-2xl shadow-green-900/30 success-explosion">
             <div className="relative mb-6">
               <EnhancedVaultAnimation 
                 size="lg" 
-                showMechanism={true}
+                showMechanism={false}
                 isSuccess={true}
+                minimal={true}
               />
             </div>
             <h2 className="text-2xl font-bold text-green-400 mb-6 cinematic-entrance">
               {t('consensusReached')}
             </h2>
-            <div className="bg-black/70 border border-green-600 p-6 rounded-xl text-xl font-mono text-white whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto scrollbar-steel cinematic-entrance">
+            <div className="bg-black/70 border border-green-600 p-4 sm:p-6 rounded-xl text-base sm:text-xl font-mono text-white whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto scrollbar-steel cinematic-entrance">
               {secretMessage}
             </div>
             <button 
@@ -205,7 +218,7 @@ export default function UnlockVault() {
 
         {/* VIEW 2: FORM PENCARIAN */}
         {(status === "idle" || status === "searching") && (
-          <div className="vault-card rounded-2xl p-8">
+          <div className="vault-card rounded-2xl p-6 sm:p-8">
             <form onSubmit={handleFindVault} className="space-y-6">
               <div>
                 <label className="block vault-label font-medium mb-2">
@@ -218,7 +231,7 @@ export default function UnlockVault() {
                     required 
                     placeholder={t('emailPlaceholder')}
                     value={email}
-                    className={`vault-input w-full pl-10 pr-4 py-3 border ${
+                    className={`vault-input w-full pl-10 pr-4 py-3 text-sm sm:text-base border ${
                       emailError ? 'border-red-500' : 'border-gray-600'
                     } rounded-lg transition-all duration-200`}
                     onChange={(e) => {
@@ -233,7 +246,7 @@ export default function UnlockVault() {
               <button 
                 type="submit" 
                 disabled={status === "searching"} 
-                className="w-full py-4 rounded-xl font-bold transition-all duration-300 relative overflow-hidden group gold-btn"
+                className="w-full py-4 sm:py-5 rounded-xl font-bold transition-all duration-300 relative overflow-hidden group gold-btn"
               >
                 <span className="relative z-10">
                   {status === "searching" ? t('searching') : t('searchVault')}
@@ -247,13 +260,13 @@ export default function UnlockVault() {
         )}
 
         {status === "selecting_vault" && (
-          <div className="vault-card rounded-2xl p-8">
+          <div className="vault-card rounded-2xl p-6 sm:p-8">
             <div className="space-y-4">
               {vaultOptions.map((v) => {
                 const dt = v.created_at?.toDate ? v.created_at.toDate() : undefined;
                 const label = dt ? dt.toISOString() : "Unknown";
                 return (
-                  <div key={v.id} className="flex items-center justify-between p-4 border border-gray-700 rounded-lg bg-black/30">
+                  <div key={v.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 p-4 border border-gray-700 rounded-lg bg-black/30">
                     <div className="text-gray-200">
                       <div className="font-semibold">{label}</div>
                       <div className="text-sm">{t('needKeys', { threshold: v.threshold.toString() })}</div>
@@ -278,7 +291,7 @@ export default function UnlockVault() {
 
         {/* VIEW 3: FORM INPUT KUNCI */}
         {(status === "collecting_keys" || status === "decrypting") && vaultData && (
-          <div className="space-y-6">
+          <div className="space-y-5 sm:space-y-6">
             <div className="vault-card rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-2">
                 <RiShieldCheckFill className="text-green-400 text-xl" />
@@ -289,7 +302,7 @@ export default function UnlockVault() {
               </p>
             </div>
 
-            <div className="vault-card rounded-2xl p-8">
+            <div className="vault-card rounded-2xl p-6 sm:p-8">
               <div className="space-y-4 mb-6">
                 {inputShares.map((_, index) => (
                   <div key={index}>
@@ -299,7 +312,7 @@ export default function UnlockVault() {
                     <input 
                       type="text"
                       value={inputShares[index]}
-                      className={`vault-input w-full p-3 rounded-lg border ${
+                      className={`vault-input w-full p-3 text-sm sm:text-base rounded-lg border ${
                         shareErrors[index] ? 'border-red-500' : 'border-gray-700'
                       } font-mono text-sm transition-all duration-200`}
                       placeholder={t('pasteKey', { index: (index + 1).toString() })}
@@ -315,7 +328,7 @@ export default function UnlockVault() {
               <button 
                 onClick={handleCombineAndDecrypt}
                 disabled={status === "decrypting"}
-                className="w-full py-5 rounded-xl font-bold text-lg relative overflow-hidden group gold-btn"
+                className="w-full py-4 sm:py-5 rounded-xl font-bold text-base sm:text-lg relative overflow-hidden group gold-btn"
               >
                 <span className="relative z-10">
                   {status === "decrypting" ? t('combining') : t('combineAndOpen')}

@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { translations, TranslationKey, Language, languages } from '@/lib/languages';
 
 interface LanguageContextType {
@@ -12,10 +12,16 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [currentLanguage, setCurrentLanguage] = useState(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('legacyvault-language') : null;
-    return saved && translations[saved as keyof typeof translations] ? saved : 'id';
-  });
+  const [currentLanguage, setCurrentLanguage] = useState('id');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('legacyvault-language');
+      if (saved && translations[saved as keyof typeof translations]) {
+        setTimeout(() => setCurrentLanguage(saved), 0);
+      }
+    } catch {}
+  }, []);
 
   const setLanguage = (lang: string) => {
     setCurrentLanguage(lang);

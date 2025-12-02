@@ -6,6 +6,7 @@ import LanguageSelector from "@/components/LanguageSelector";
 import EnhancedVaultAnimation from "@/components/EnhancedVaultAnimation";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import ToastContainer from "@/components/Toast";
 
 export default function Home() {
   const { t } = useLanguage();
@@ -17,20 +18,24 @@ export default function Home() {
     <main className="relative min-h-screen overflow-hidden" style={{
       background: 'linear-gradient(135deg, var(--iron-black) 0%, var(--antique-steel) 60%, var(--old-vault) 100%)'
     }}>
+      <ToastContainer />
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <div className="w-[460px] h-[460px] sm:w-[540px] sm:h-[540px] rounded-full bg-gradient-radial from-amber-400/10 via-amber-300/6 to-transparent blur-3xl border border-amber-500/20"></div>
+      </div>
       {/* Language Selector */}
-      <div className="absolute top-6 right-6 z-20">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 pointer-events-auto">
         <LanguageSelector />
       </div>
 
       {/* Steel Texture Background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-radial from-yellow-600/20 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-radial from-amber-500/15 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-radial from-orange-600/10 to-transparent rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-56 h-56 sm:w-96 sm:h-96 bg-gradient-radial from-yellow-600/20 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 sm:w-80 sm:h-80 bg-gradient-radial from-amber-500/15 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute top-3/4 left-1/2 w-40 h-40 sm:w-64 sm:h-64 bg-gradient-radial from-orange-600/10 to-transparent rounded-full blur-3xl"></div>
       </div>
 
       {/* Steel Grid Pattern */}
-      <div className="absolute inset-0 opacity-5" style={{
+      <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
         backgroundImage: `
           linear-gradient(rgba(184, 184, 189, 0.1) 1px, transparent 1px),
           linear-gradient(90deg, rgba(184, 184, 189, 0.1) 1px, transparent 1px)
@@ -39,7 +44,7 @@ export default function Home() {
       }}></div>
 
       <motion.div 
-        className="relative z-20 flex w-full max-w-6xl flex-col items-center justify-center min-h-screen mx-auto px-6 py-24 text-center"
+        className="relative z-20 flex w-full max-w-6xl flex-col items-center justify-center min-h-screen mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center"
         initial={{ opacity: 0, scale: 1 }}
         animate={{ opacity: 1, scale: zoomUnlock ? 1.15 : zoomCreate ? 1.05 : 1 }}
         transition={{ duration: 1 }}
@@ -55,11 +60,13 @@ export default function Home() {
             delay: 0.2 
           }}
         >
-          <EnhancedVaultAnimation size="xl" showMechanism={true} />
+          <div className="scale-90 sm:scale-100">
+            <EnhancedVaultAnimation size="xl" showMechanism={false} minimal={true} />
+          </div>
         </motion.div>
         
         <motion.h1 
-          className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 text-[color:var(--royal-gold-glow)]"
+          className="text-3xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 text-[color:var(--royal-gold-glow)]"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.2 }}
@@ -68,7 +75,7 @@ export default function Home() {
         </motion.h1>
         
         <motion.p 
-          className="text-lg sm:text-xl lg:text-2xl text-[color:var(--soft-pewter)] mb-4 max-w-4xl leading-relaxed font-serif"
+          className="text-base sm:text-xl lg:text-2xl text-[color:var(--soft-pewter)] mb-3 sm:mb-4 max-w-4xl leading-relaxed font-serif px-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.3 }}
@@ -77,7 +84,7 @@ export default function Home() {
         </motion.p>
         
         <motion.p 
-          className="text-base sm:text-lg text-[color:var(--old-silver)] mb-12 max-w-3xl leading-relaxed"
+          className="text-sm sm:text-lg text-[color:var(--old-silver)] mb-8 sm:mb-12 max-w-3xl leading-relaxed px-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.4 }}
@@ -86,14 +93,14 @@ export default function Home() {
         </motion.p>
         
         <motion.div 
-          className="flex flex-col sm:flex-row gap-6 w-full max-w-lg"
+          className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-md sm:max-w-lg px-2 sm:px-0"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.1 }}
         >
           <Link href="/create" className="flex-1" prefetch={false}>
             <motion.button 
-              className="group w-full px-8 py-5 rounded-xl font-bold text-lg transition-all duration-300 relative overflow-hidden gold-btn"
+              className="group w-full px-6 sm:px-8 py-4 sm:py-5 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 relative overflow-hidden gold-btn"
               whileHover={{ 
                 scale: 1.02
               }}
@@ -115,7 +122,7 @@ export default function Home() {
           </Link>
           <Link href="/unlock" className="flex-1" prefetch={false}>
             <motion.button 
-              className="group w-full px-8 py-5 rounded-xl font-bold text-lg transition-all duration-300 relative overflow-hidden steel-btn"
+              className="group w-full px-6 sm:px-8 py-4 sm:py-5 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 relative overflow-hidden steel-btn"
               whileHover={{ 
                 scale: 1.02
               }}
